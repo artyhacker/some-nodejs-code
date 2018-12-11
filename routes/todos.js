@@ -25,7 +25,7 @@ router.get('/', (req, res, next) => {
       console.log('[SELECT ERROR] - ', err.message);
       return;
     }
-    res.send(result);
+    res.type('json').status(200).json(result);
   });
 });
 
@@ -36,7 +36,11 @@ router.post('/', (req, res, next) => {
       console.log('[INSERT ERROR] - ', err.message);
       return;
     }
-    res.send(params);
+    res.type('json').status(200).json({
+      id: result.insertId,
+      text: req.body.text,
+      done: req.body.done,
+    });
   });
 });
 
@@ -46,7 +50,7 @@ router.get('/:todoId', (req, res, next) => {
       console.log('[QUERY ERROR]: ', err.message);
       return;
     }
-    res.send(result);
+    res.type('json').status(200).json(result[0]);
   });
 });
 
@@ -57,7 +61,11 @@ router.put('/:todoId', (req, res, next) => {
       console.log('[UPDATE ERROR]: ', err.message);
       return;
     }
-    res.send(params);
+    res.type('json').status(200).json({
+      id: params[2],
+      text: params[0],
+      done: params[1],
+    });
   });
 });
 
@@ -67,7 +75,7 @@ router.delete('/:todoId', (req, res, next) => {
       console.log('[DELETE ERROR]: ', err.message);
       return;
     }
-    res.send(req.params.todoId);
+    res.type('json').status(200).json({ id: parseInt(req.params.todoId, 10) });
   });
 });
 
