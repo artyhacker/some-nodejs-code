@@ -1,15 +1,13 @@
 const express = require('express');
 const mysql = require('mysql');
 
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: '599599',
   port: '3306',
   database: 'todoDB',
 });
-
-connection.connect();
 
 const router = express.Router();
 
@@ -19,19 +17,32 @@ const querySQL = 'SELECT * FROM todoTable WHERE id=?';
 const updateSQL = 'UPDATE todoTable SET text=?,done=? WHERE id=?';
 const deleteSQL = 'DELETE FROM todoTable where id=?';
 
+const Query = (sql, options, cb) => {
+  pool.getConnection((err, conn) => {
+    if (err) {
+      cb(err, null, null);
+    } else {
+      conn.query(sql, options, (e, results, fields) => {
+        conn.release();
+        cb(e, results, fields);
+      });
+    }
+  });
+};
+
 router.get('/', (req, res, next) => {
-  connection.query(findAllSQL, (err, result) => {
+  Query(findAllSQL, (err, results) => {
     if (err) {
       console.log('[SELECT ERROR] - ', err.message);
       return;
     }
-    res.type('json').status(200).json(result);
+    res.type('json').status(200).json(results);
   });
 });
 
 router.post('/', (req, res, next) => {
   const params = [req.body.text, req.body.done];
-  connection.query(addSQL, params, (err, result) => {
+  Query(addSQL, params, (err, result) => {
     if (err) {
       console.log('[INSERT ERROR] - ', err.message);
       return;
@@ -45,7 +56,7 @@ router.post('/', (req, res, next) => {
 });
 
 router.get('/:todoId', (req, res, next) => {
-  connection.query(querySQL, req.params.todoId, (err, result) => {
+  Query(querySQL, req.params.todoId, (err, result) => {
     if (err) {
       console.log('[QUERY ERROR]: ', err.message);
       return;
@@ -56,7 +67,7 @@ router.get('/:todoId', (req, res, next) => {
 
 router.put('/:todoId', (req, res, next) => {
   const params = [req.body.text, req.body.done, parseInt(req.params.todoId, 10)];
-  connection.query(updateSQL, params, (err, result) => {
+  Query(updateSQL, params, (err, result) => {
     if (err) {
       console.log('[UPDATE ERROR]: ', err.message);
       return;
@@ -70,7 +81,7 @@ router.put('/:todoId', (req, res, next) => {
 });
 
 router.delete('/:todoId', (req, res, next) => {
-  connection.query(deleteSQL, parseInt(req.params.todoId, 10), (err, result) => {
+  Query(deleteSQL, parseInt(req.params.todoId, 10), (err, result) => {
     if (err) {
       console.log('[DELETE ERROR]: ', err.message);
       return;
@@ -78,7 +89,5 @@ router.delete('/:todoId', (req, res, next) => {
     res.type('json').status(200).json({ id: parseInt(req.params.todoId, 10) });
   });
 });
-
-// connection.end();
 
 module.exports = router;
