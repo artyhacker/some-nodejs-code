@@ -12,10 +12,11 @@ const pool = mysql.createPool({
 const router = express.Router();
 
 const findAllSQL = 'SELECT * FROM todoTable';
-const addSQL = 'INSERT INTO todoTable(id,text,done) VALUES(0,?,?)';
+const addSQL = 'INSERT INTO todoTable(id,text,done,typeId) VALUES(0,?,?,?)';
 const querySQL = 'SELECT * FROM todoTable WHERE id=?';
-const updateSQL = 'UPDATE todoTable SET text=?,done=? WHERE id=?';
+const updateSQL = 'UPDATE todoTable SET text=?,done=?,typeId=? WHERE id=?';
 const deleteSQL = 'DELETE FROM todoTable where id=?';
+const queryWithTypeSQL = 'SELECT * FROM todoTable WHERE typeId=?';
 
 const Query = (sql, options, cb) => {
   pool.getConnection((err, conn) => {
@@ -31,17 +32,23 @@ const Query = (sql, options, cb) => {
 };
 
 router.get('/', (req, res, next) => {
-  Query(findAllSQL, (err, results) => {
+  const cb = (err, results) => {
     if (err) {
       console.log('[SELECT ERROR] - ', err.message);
       return;
     }
     res.type('json').status(200).json(results);
-  });
+  };
+
+  if (req.query.typeId) {
+    Query(queryWithTypeSQL, req.query.typeId, cb);
+  } else {
+    Query(findAllSQL, cb);
+  }
 });
 
 router.post('/', (req, res, next) => {
-  const params = [req.body.text, req.body.done];
+  const params = [req.body.text, req.body.done, req.body.typeId];
   Query(addSQL, params, (err, result) => {
     if (err) {
       console.log('[INSERT ERROR] - ', err.message);
@@ -51,6 +58,7 @@ router.post('/', (req, res, next) => {
       id: result.insertId,
       text: req.body.text,
       done: req.body.done,
+      typeId: req.body.typeId,
     });
   });
 });
@@ -66,16 +74,17 @@ router.get('/:todoId', (req, res, next) => {
 });
 
 router.put('/:todoId', (req, res, next) => {
-  const params = [req.body.text, req.body.done, parseInt(req.params.todoId, 10)];
+  const params = [req.body.text, req.body.done, req.body.typeId, parseInt(req.params.todoId, 10)];
   Query(updateSQL, params, (err, result) => {
     if (err) {
       console.log('[UPDATE ERROR]: ', err.message);
       return;
     }
     res.type('json').status(200).json({
-      id: params[2],
+      id: params[3],
       text: params[0],
       done: params[1],
+      typeId: params[2],
     });
   });
 });
