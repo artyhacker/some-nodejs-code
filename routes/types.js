@@ -7,6 +7,7 @@ const pool = mysql.createPool({
   password: '599599',
   port: '3306',
   database: 'todoDB',
+  connectionLimit: 0,
 });
 
 const router = express.Router();
@@ -74,7 +75,7 @@ router.put('/:typeId', (req, res, next) => {
       return;
     }
     res.type('json').status(200).json({
-      id: params[2],
+      id: parseInt(req.params.typeId, 10),
       name: params[0],
       layer: params[1],
       pId: params[2],

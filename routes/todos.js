@@ -7,6 +7,7 @@ const pool = mysql.createPool({
   password: '599599',
   port: '3306',
   database: 'todoDB',
+  connectionLimit: 0,
 });
 
 const router = express.Router();
