@@ -76,7 +76,7 @@ router.get('/:todoId', (req, res, next) => {
 });
 
 router.put('/:todoId', (req, res, next) => {
-  const completeTime = req.body.done === '1' ? new Date() : null;
+  const completeTime = req.body.done === '1' || req.body.done === 1 ? new Date() : null;
   const params = [req.body.text, req.body.done, req.body.typeId,
     completeTime, parseInt(req.params.todoId, 10)];
   Query(updateSQL, params, (err, result) => {
